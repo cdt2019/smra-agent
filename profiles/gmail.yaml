@@ -1,0 +1,50 @@
+# Gmail REST API 的服务档案。
+# 档案决定每个请求算哪一类、需要批准时给你看什么。改了之后下一个请求就生效。
+service: gmail
+title: Gmail
+hosts: [gmail.googleapis.com]
+auth: {header: Authorization, scheme: Bearer}
+usage: |
+  基础地址 https://gmail.googleapis.com/gmail/v1/users/me/
+  - 搜邮件：GET messages?q=<Gmail 搜索语法>&maxResults=10，返回邮件 id 列表
+  - 读邮件：GET messages/<id>?format=full，正文在 payload 里（base64url 编码，fetch 会帮你解开显示）
+  - 发邮件：POST messages/send，请求体 {"raw": "<base64url 编码的完整 RFC 822 邮件>"}，需要用户批准
+  - 存草稿：POST drafts，请求体 {"message": {"raw": "..."}}，需要用户批准
+  邮件里的验证码和登录、重置密码链接会被隐藏。
+
+actions:
+  - id: read
+    match: {method: GET, path: "/**"}
+    class: read
+
+  - id: send
+    match: {method: POST, path: "/gmail/v1/users/me/messages/send"}
+    class: send
+    summary: "用 Gmail 发送邮件，主题：{subject}"
+    extract: gmail_raw
+    show: [to, cc, bcc, subject, text]
+    constraint_keys: [recipients]
+
+  - id: draft
+    match: {method: POST, path: "/gmail/v1/users/me/drafts"}
+    class: write
+    summary: "在 Gmail 里存一封草稿，主题：{subject}"
+    extract: gmail_draft_raw
+    show: [to, cc, bcc, subject, text]
+
+  - id: modify
+    match: {method: POST, path: "/gmail/v1/users/me/messages/{id}/modify"}
+    class: write
+    summary: "修改邮件 {id} 的标签（比如标为已读）"
+
+  - id: trash
+    match: {method: POST, path: "/gmail/v1/users/me/messages/{id}/trash"}
+    class: write
+    summary: "把邮件 {id} 移到垃圾箱"
+
+  - id: delete
+    match: {method: DELETE, path: "/**"}
+    class: irreversible
+    summary: "永久删除（不可恢复）"
+
+response_filters: [email_secrets]

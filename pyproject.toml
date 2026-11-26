@@ -1,0 +1,63 @@
+[project]
+name = "smra-agent"
+version = "0.1.0"
+description = "Your private AI agent, self-hosted: works in an isolated computer, every network exit guarded, real credentials never enter the sandbox"
+license = "MIT"
+license-files = ["LICENSE"]
+requires-python = ">=3.12"
+dependencies = [
+    "aiohttp>=3.9",
+    "anthropic>=1.0",
+    "mitmproxy>=12.0",
+    "cryptography>=42",
+    "ruamel.yaml>=0.18",
+    "playwright>=1.65.2",
+]
+
+[dependency-groups]
+dev = [
+    "mypy>=2.4.1",
+    "pytest>=8",
+    "pytest-asyncio>=0.23",
+    "ruff>=0.17.6",
+]
+
+[tool.uv]
+package = false
+
+[tool.ruff]
+line-length = 120
+target-version = "py312"
+# cell/ 是电脑镜像里的代码，改了要重建镜像才生效：先不检查，下次重建镜像时一起收拾
+extend-exclude = ["cell"]
+
+[tool.ruff.lint]
+# 默认的 E/F 加上：导入顺序、常见的 bug 模式、可以简化的写法、asyncio 的坑
+select = ["E", "F", "W", "I", "B", "UP", "ASYNC", "RUF"]
+ignore = [
+    "E501",     # 行长交给 line-length 提示，不硬卡：中文注释按字符算会误报
+    "RUF001", "RUF002", "RUF003",   # 中文全角标点
+    "E731",     # 一行的 lambda 赋值
+    "ASYNC109", # 异步函数带 timeout 参数：驱动接口就是这么设计的
+    "ASYNC240", # 异步函数里的 Path 小操作（stat、mkdir）：本地磁盘，不值得进线程
+    "B905",     # zip 不加 strict：配对的两边长度由构造保证
+]
+
+[tool.ruff.lint.per-file-ignores]
+# 测试里：解包只取一部分、异步测试里直接跑 docker 命令、wait_until 的 lambda 当场就用完
+"tests/*" = ["B011", "RUF059", "ASYNC221", "ASYNC230", "B023"]
+
+[tool.mypy]
+python_version = "3.12"
+platform = "linux"      # 宿主在 Linux 上跑；Windows 只用来开发和跑测试
+files = ["host"]
+ignore_missing_imports = true
+check_untyped_defs = false
+warn_unused_ignores = true
+warn_redundant_casts = true
+
+[tool.pytest.ini_options]
+asyncio_mode = "auto"
+asyncio_default_fixture_loop_scope = "function"
+pythonpath = [".", "cell"]
+testpaths = ["tests"]

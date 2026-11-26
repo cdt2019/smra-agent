@@ -1,0 +1,102 @@
+# GitHub REST API 的服务档案。
+# 连接：在 GitHub 的 Settings → Developer settings → Personal access tokens 建一个 fine-grained 令牌，
+# 只勾要用的仓库和权限，然后 uv run python -m host.creds add github，从终端输入令牌。
+service: github
+title: GitHub
+hosts: [api.github.com]
+auth: {header: Authorization, scheme: Bearer}
+usage: |
+  基础地址 https://api.github.com/
+  - 我是谁：GET user
+  - 仓库：GET repos/<owner>/<repo>；文件：GET repos/<owner>/<repo>/contents/<路径>（内容是 base64）
+  - issue 和 PR：GET repos/<owner>/<repo>/issues?state=open、GET repos/<owner>/<repo>/pulls/<号>
+  - 通知：GET notifications；搜索：GET search/issues?q=<GitHub 搜索语法>
+  - 开 issue：POST repos/<owner>/<repo>/issues，请求体 {"title": "...", "body": "..."}。需要用户批准
+  - 评论：POST repos/<owner>/<repo>/issues/<号>/comments，请求体 {"body": "..."}（PR 的评论也走这里）。需要用户批准
+  - 改 issue（关闭、加标签）：PATCH repos/<owner>/<repo>/issues/<号>。需要用户批准
+  - 开 PR、提交评审、改文件都要用户批准；合并和删除每次都要单独批准
+  GraphQL（POST graphql）也能用，但查询和修改分不开，每次都要批准，能用 REST 就用 REST。
+  写到 issue、评论、PR 里的内容公开仓库里谁都看得到。
+
+actions:
+  - id: read
+    match: {method: GET, path: "/**"}
+    class: read
+
+  - id: issue
+    match: {method: POST, path: "/repos/{owner}/{repo}/issues"}
+    class: send
+    summary: "在 {owner}/{repo} 开 issue：{body.title}"
+    show: [body.title, body.body]
+    constraint_keys: [owner, repo]
+
+  - id: comment
+    match: {method: POST, path: "/repos/{owner}/{repo}/issues/{number}/comments"}
+    class: send
+    summary: "在 {owner}/{repo} #{number} 下面评论"
+    show: [body.body]
+    constraint_keys: [owner, repo]
+
+  - id: review_comment
+    match: {method: POST, path: "/repos/{owner}/{repo}/pulls/{number}/comments"}
+    class: send
+    summary: "在 {owner}/{repo} PR #{number} 的代码上评论"
+    show: [body.path, body.body]
+    constraint_keys: [owner, repo]
+
+  - id: review
+    match: {method: POST, path: "/repos/{owner}/{repo}/pulls/{number}/reviews"}
+    class: send
+    summary: "给 {owner}/{repo} PR #{number} 提交评审（{body.event}）"
+    show: [body.event, body.body]
+    constraint_keys: [owner, repo]
+
+  - id: pull
+    match: {method: POST, path: "/repos/{owner}/{repo}/pulls"}
+    class: send
+    summary: "在 {owner}/{repo} 开 PR：{body.title}（{body.head} → {body.base}）"
+    show: [body.title, body.head, body.base, body.body]
+    constraint_keys: [owner, repo]
+
+  - id: edit_issue
+    match: {method: PATCH, path: "/repos/{owner}/{repo}/issues/{number}"}
+    class: write
+    summary: "修改 {owner}/{repo} #{number}（状态：{body.state}，标题：{body.title}）"
+    show: [body.state, body.title, body.body]
+
+  - id: labels
+    match: {method: POST, path: "/repos/{owner}/{repo}/issues/{number}/labels"}
+    class: write
+    summary: "给 {owner}/{repo} #{number} 加标签"
+
+  - id: merge
+    match: {method: PUT, path: "/repos/{owner}/{repo}/pulls/{number}/merge"}
+    class: irreversible
+    summary: "合并 {owner}/{repo} PR #{number}（{body.merge_method}）"
+
+  - id: commit_file
+    match: {method: PUT, path: "/repos/{owner}/{repo}/contents/**"}
+    class: write
+    summary: "往 {owner}/{repo} 提交一个文件：{body.message}（分支 {body.branch}）"
+    show: [body.message, body.branch]
+
+  - id: gist
+    match: {method: POST, path: "/gists"}
+    class: send
+    summary: "建一个 gist（公开：{body.public}）：{body.description}"
+    show: [body.public, body.description]
+
+  - id: star
+    match: {method: PUT, path: "/user/starred/{owner}/{repo}"}
+    class: write
+    summary: "给 {owner}/{repo} 加星"
+
+  - id: graphql
+    match: {method: POST, path: "/graphql"}
+    class: write
+    summary: "GraphQL 请求（可能是查询也可能是修改，看下面的原始请求）"
+
+  - id: delete
+    match: {method: DELETE, path: "/**"}
+    class: irreversible
+    summary: "删除（不可恢复）"

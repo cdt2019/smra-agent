@@ -1,0 +1,71 @@
+# Notion API 的服务档案。
+# 连接：在 https://www.notion.so/profile/integrations 建一个内部集成，复制它的令牌，
+# 然后 uv run python -m host.creds add notion。集成只看得到你在页面的"连接"菜单里加了它的页面。
+service: notion
+title: Notion
+hosts: [api.notion.com]
+# Notion 每个请求都要带 Notion-Version，出网代理换凭证时补上（电脑自己带了就用它的）
+auth: {header: Authorization, scheme: Bearer, headers: {Notion-Version: "2022-06-28"}}
+usage: |
+  基础地址 https://api.notion.com/v1/，请求体用 JSON。
+  - 搜页面和数据库：POST search，请求体 {"query": "关键词"}（这是读取，直接放行）
+  - 查数据库：POST databases/<id>/query，请求体 {"filter": {...}, "sorts": [...]}（读取）
+  - 看页面属性：GET pages/<id>；看正文：GET blocks/<页面 id>/children?page_size=100
+  - 新建页面：POST pages，请求体 {"parent": {"page_id": "..."}, "properties": {...}, "children": [...]}。需要用户批准
+  - 往页面里追加内容：PATCH blocks/<id>/children，请求体 {"children": [...]}。需要用户批准
+  - 改属性、移到垃圾箱：PATCH pages/<id>（{"in_trash": true}）。需要用户批准
+  - 评论：POST comments（会通知页面相关的人）。需要用户批准
+  只能看到用户把集成加进去了的页面；看不到就请用户在那个页面的"连接"里加上它。
+
+actions:
+  - id: read
+    match: {method: GET, path: "/**"}
+    class: read
+
+  - id: search
+    match: {method: POST, path: "/v1/search"}
+    class: read
+
+  - id: query
+    match: {method: POST, path: "/v1/databases/{id}/query"}
+    class: read
+
+  - id: create_page
+    match: {method: POST, path: "/v1/pages"}
+    class: write
+    summary: "在 Notion 新建页面"
+
+  - id: update_page
+    match: {method: PATCH, path: "/v1/pages/{id}"}
+    class: write
+    summary: "修改 Notion 页面 {id} 的属性（或移到垃圾箱，可以恢复）"
+
+  - id: append
+    match: {method: PATCH, path: "/v1/blocks/{id}/children"}
+    class: write
+    summary: "往 Notion 的 {id} 里追加内容"
+
+  - id: update_block
+    match: {method: PATCH, path: "/v1/blocks/{id}"}
+    class: write
+    summary: "修改 Notion 的块 {id}"
+
+  - id: delete_block
+    match: {method: DELETE, path: "/v1/blocks/{id}"}
+    class: write
+    summary: "删除 Notion 的块 {id}（进垃圾箱，可以恢复）"
+
+  - id: create_database
+    match: {method: POST, path: "/v1/databases"}
+    class: write
+    summary: "新建 Notion 数据库"
+
+  - id: database
+    match: {method: "*", path: "/v1/databases/**"}
+    class: write
+    summary: "修改 Notion 数据库的结构"
+
+  - id: comment
+    match: {method: POST, path: "/v1/comments"}
+    class: send
+    summary: "在 Notion 留评论（会通知页面相关的人）"

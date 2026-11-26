@@ -1,0 +1,67 @@
+# Google 日历 REST API 的服务档案。连接：uv run python -m host.creds add gcalendar --google-login
+service: gcalendar
+title: Google 日历
+hosts: [www.googleapis.com]
+auth: {header: Authorization, scheme: Bearer}
+usage: |
+  基础地址 https://www.googleapis.com/calendar/v3/
+  - 有哪些日历：GET users/me/calendarList
+  - 查日程：GET calendars/primary/events?timeMin=2026-11-25T00:00:00%2B08:00&timeMax=...&singleEvents=true&orderBy=startTime
+    （时间用 RFC 3339，带时区；+ 要写成 %2B）
+  - 看一个日程：GET calendars/primary/events/<id>
+  - 新建：POST calendars/primary/events，请求体
+    {"summary": "标题", "start": {"dateTime": "2026-11-26T15:00:00+08:00"}, "end": {"dateTime": "..."},
+     "location": "...", "description": "...", "attendees": [{"email": "..."}]}
+    全天日程用 {"date": "2026-11-26"}。需要用户批准；拉了别人（attendees）的会给对方发邀请，审批里会写明。
+  - 修改：PATCH calendars/primary/events/<id>，只写要改的字段。需要用户批准
+  - 删除：DELETE calendars/primary/events/<id>。需要用户批准
+  要给参与人发通知时加 ?sendUpdates=all，默认不发。
+
+actions:
+  - id: read
+    match: {method: GET, path: "/**"}
+    class: read
+
+  - id: create
+    match: {method: POST, path: "/calendar/v3/calendars/{calendar}/events"}
+    class: send
+    summary: "在日历里新建日程：{title}（{start} 到 {end}）"
+    extract: gcal_event
+    show: [title, start, end, location, attendees, text]
+    constraint_keys: [attendees]
+
+  - id: quick_add
+    match: {method: POST, path: "/calendar/v3/calendars/{calendar}/events/quickAdd"}
+    class: write
+    summary: "按一句话新建日程（那句话在下面原始请求的 text 参数里）"
+
+  - id: move
+    match: {method: POST, path: "/calendar/v3/calendars/{calendar}/events/{id}/move"}
+    class: write
+    summary: "把日程 {id} 移到另一个日历"
+
+  - id: update
+    match: {method: PATCH, path: "/calendar/v3/calendars/{calendar}/events/{id}"}
+    class: send
+    summary: "修改日程 {id}：{title}"
+    extract: gcal_patch
+    show: [title, start, end, location, attendees, text]
+    constraint_keys: [attendees]
+
+  - id: replace
+    match: {method: PUT, path: "/calendar/v3/calendars/{calendar}/events/{id}"}
+    class: send
+    summary: "修改日程 {id}：{title}（{start} 到 {end}）"
+    extract: gcal_event
+    show: [title, start, end, location, attendees, text]
+    constraint_keys: [attendees]
+
+  - id: delete_event
+    match: {method: DELETE, path: "/calendar/v3/calendars/{calendar}/events/{id}"}
+    class: irreversible
+    summary: "删除日程 {id}（有参与人的话，对方的日历里也会取消）"
+
+  - id: delete
+    match: {method: DELETE, path: "/**"}
+    class: irreversible
+    summary: "删除（不可恢复）"

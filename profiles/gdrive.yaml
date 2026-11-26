@@ -1,0 +1,73 @@
+# Google 云盘 REST API 的服务档案。连接：uv run python -m host.creds add gdrive --google-login
+service: gdrive
+title: Google 云盘
+hosts: [www.googleapis.com]
+auth: {header: Authorization, scheme: Bearer}
+usage: |
+  基础地址 https://www.googleapis.com/drive/v3/
+  - 找文件：GET files?q=<查询>&fields=files(id,name,mimeType,modifiedTime)&pageSize=20
+    查询例子：name contains '报销'、'<文件夹 id>' in parents、mimeType = 'application/vnd.google-apps.folder'，
+    要排除垃圾箱加 and trashed = false（引号要 URL 编码）
+  - 文件信息：GET files/<id>?fields=id,name,mimeType,size,parents,webViewLink
+  - 下载普通文件：GET files/<id>?alt=media
+  - 导出 Google 文档/表格：GET files/<id>/export?mimeType=text/plain（表格用 text/csv）
+  - 新建文件夹：POST files，请求体 {"name": "...", "mimeType": "application/vnd.google-apps.folder", "parents": ["<id>"]}
+  - 上传：POST https://www.googleapis.com/upload/drive/v3/files?uploadType=multipart（multipart/related）
+  - 改名、移动、移到垃圾箱：PATCH files/<id>（{"name": ...}、?addParents=&removeParents=、{"trashed": true}）
+  - 分享：POST files/<id>/permissions，{"type": "user", "role": "reader", "emailAddress": "..."}
+  除了读取，都要用户批准。分享给别人和永久删除尤其要谨慎。
+
+actions:
+  - id: read
+    match: {method: GET, path: "/**"}
+    class: read
+
+  - id: share
+    match: {method: POST, path: "/drive/v3/files/{id}/permissions"}
+    class: send
+    summary: "把云盘文件 {id} 分享给 {grantee}（{role}）"
+    extract: drive_permission
+    show: [grantee, role]
+    constraint_keys: [grantee]
+
+  - id: change_share
+    match: {method: PATCH, path: "/drive/v3/files/{id}/permissions/{permission}"}
+    class: write
+    summary: "修改云盘文件 {id} 的一项分享权限，改成 {body.role}"
+
+  - id: unshare
+    match: {method: DELETE, path: "/drive/v3/files/{id}/permissions/{permission}"}
+    class: write
+    summary: "取消云盘文件 {id} 的一项分享"
+
+  - id: create
+    match: {method: POST, path: "/drive/v3/files"}
+    class: write
+    summary: "在云盘里新建：{body.name}"
+    show: [body.name, body.mimeType]
+
+  - id: upload
+    match: {method: POST, path: "/upload/drive/v3/files"}
+    class: write
+    summary: "往云盘上传一个新文件"
+
+  - id: copy
+    match: {method: POST, path: "/drive/v3/files/{id}/copy"}
+    class: write
+    summary: "在云盘里复制文件 {id}，新名字：{body.name}"
+
+  - id: update
+    match: {method: PATCH, path: "/drive/v3/files/{id}"}
+    class: write
+    summary: "修改云盘文件 {id}（改名、移动或移到垃圾箱）"
+    show: [body.name, body.trashed]
+
+  - id: overwrite
+    match: {method: PATCH, path: "/upload/drive/v3/files/{id}"}
+    class: write
+    summary: "用新内容覆盖云盘文件 {id}"
+
+  - id: delete
+    match: {method: DELETE, path: "/**"}
+    class: irreversible
+    summary: "永久删除（不经过垃圾箱，不可恢复）"

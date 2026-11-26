@@ -1,0 +1,90 @@
+# Slack Web API 的服务档案。
+# 连接：在 https://api.slack.com/apps 建一个应用，给要用的权限（比如 channels:history、chat:write），
+# 装进工作区，复制 Bot User OAuth Token（xoxb-...），然后 uv run python -m host.creds add slack。
+#
+# Slack 的方法名在路径里，而且几乎每个方法都接受 GET 和 POST，参数也能放在网址里：
+# 所以不能按 HTTP 方法分读写，要按方法名。下面先列会改东西的，再列只读的，其余一律按不可撤销、每次问你。
+service: slack
+title: Slack
+hosts: [slack.com]
+auth: {header: Authorization, scheme: Bearer}
+usage: |
+  基础地址 https://slack.com/api/，方法名就是路径，比如 https://slack.com/api/conversations.history。
+  读取用 GET 加查询参数；发消息用 POST 和 JSON 请求体（content_type 写 application/json; charset=utf-8），
+  这样审批里才看得到发到哪、发什么。
+  - 有哪些频道：GET conversations.list?types=public_channel,private_channel
+  - 读消息：GET conversations.history?channel=<频道 id>&limit=50；一串回复：GET conversations.replies?channel=...&ts=...
+  - 人：GET users.list、GET users.info?user=<id>；搜消息：GET search.messages?query=...（要用户令牌）
+  - 发消息：POST chat.postMessage，请求体 {"channel": "<频道 id>", "text": "..."}。需要用户批准，长期授权只覆盖同一个频道
+  - 改、删自己发的消息：chat.update、chat.delete。需要用户批准
+  返回里 "ok": false 表示失败，看 error 字段。
+
+actions:
+  - id: post
+    match: {method: "*", path: "/api/chat.postMessage"}
+    class: send
+    summary: "在 Slack 的 {body.channel} 发消息"
+    show: [body.channel, body.text]
+    constraint_keys: [body.channel]
+
+  - id: ephemeral
+    match: {method: "*", path: "/api/chat.postEphemeral"}
+    class: send
+    summary: "在 Slack 的 {body.channel} 给 {body.user} 发一条只有对方看得到的消息"
+    show: [body.channel, body.user, body.text]
+    constraint_keys: [body.channel]
+
+  - id: schedule
+    match: {method: "*", path: "/api/chat.scheduleMessage"}
+    class: send
+    summary: "在 Slack 的 {body.channel} 定时发消息（{body.post_at}）"
+    show: [body.channel, body.post_at, body.text]
+    constraint_keys: [body.channel]
+
+  - id: update
+    match: {method: "*", path: "/api/chat.update"}
+    class: write
+    summary: "修改 Slack 的 {body.channel} 里的一条消息"
+    show: [body.channel, body.text]
+
+  - id: delete
+    match: {method: "*", path: "/api/chat.delete"}
+    class: irreversible
+    summary: "删除 Slack 的 {body.channel} 里的一条消息"
+
+  - id: upload
+    match: {method: "*", path: "/api/files.*"}
+    class: send
+    summary: "往 Slack 上传或分享文件（看下面的原始请求）"
+
+  - id: react
+    match: {method: "*", path: "/api/reactions.add"}
+    class: write
+    summary: "在 Slack 的一条消息上加表情 {body.name}"
+
+  # 只读的方法：GET 和 POST 都放行
+  - id: read
+    match: {method: "*", path: "/api/conversations.history"}
+    class: read
+  - {id: read_replies, match: {method: "*", path: "/api/conversations.replies"}, class: read}
+  - {id: read_list, match: {method: "*", path: "/api/conversations.list"}, class: read}
+  - {id: read_info, match: {method: "*", path: "/api/conversations.info"}, class: read}
+  - {id: read_members, match: {method: "*", path: "/api/conversations.members"}, class: read}
+  - {id: read_mine, match: {method: "*", path: "/api/users.conversations"}, class: read}
+  - {id: read_users, match: {method: "*", path: "/api/users.list"}, class: read}
+  - {id: read_user, match: {method: "*", path: "/api/users.info"}, class: read}
+  - {id: read_search, match: {method: "*", path: "/api/search.messages"}, class: read}
+  - {id: read_auth, match: {method: "*", path: "/api/auth.test"}, class: read}
+  - {id: read_team, match: {method: "*", path: "/api/team.info"}, class: read}
+  - {id: read_reactions, match: {method: "*", path: "/api/reactions.get"}, class: read}
+  - {id: read_pins, match: {method: "*", path: "/api/pins.list"}, class: read}
+
+  - id: other
+    match: {method: "*", path: "/api/{method_name}"}
+    class: irreversible
+    summary: "调用 Slack 的 {method_name}（不在档案列出的方法里，看下面的原始请求）"
+
+  - id: other_path
+    match: {method: "*", path: "/**"}
+    class: irreversible
+    summary: "Slack 上档案没列出的地址（看下面的原始请求）"

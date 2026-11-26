@@ -1,0 +1,43 @@
+#!/bin/sh
+# microVM 的 1 号进程（内核参数 init=/sbin/smra-init）。
+#
+# 三块盘（第 5.6 节）：
+#   /dev/vda  系统盘，只读。上面叠一层内存里的可写层，冷启动时清空
+#   /dev/vdb  主目录盘，读写，挂在 /home/agent
+#   /dev/vdc  核心盘，只读，挂在 /opt/agent：运行程序（agent_run.py、cell_tools.py、guest_agent.py）
+# 没有网卡。宿主接口和出网代理由客户机代理程序经 vsock 转出去。
+set -u
+export PATH=/usr/local/sbin:/usr/local/bin:/usr/sbin:/usr/bin:/sbin:/bin
+
+if [ "${SMRA_STAGE:-}" != "2" ]; then
+    mount -t proc proc /proc
+    mount -t sysfs sys /sys
+    mount -t devtmpfs dev /dev 2>/dev/null
+    # 只读系统盘 + 内存可写层。内核不支持 overlay 时退回到只给几个目录可写
+    mkdir -p /run 2>/dev/null
+    mount -t tmpfs -o size=512m tmpfs /run
+    mkdir -p /run/ov/upper /run/ov/work /run/ov/merged
+    if mount -t overlay overlay -o lowerdir=/,upperdir=/run/ov/upper,workdir=/run/ov/work /run/ov/merged 2>/dev/null; then
+        mount --move /proc /run/ov/merged/proc
+        mount --move /sys /run/ov/merged/sys
+        mount --move /dev /run/ov/merged/dev
+        export SMRA_STAGE=2
+        exec switch_root /run/ov/merged /sbin/smra-init
+    fi
+    echo "smra-init: 没有 overlay，系统盘只读，只有 /tmp 和 /var/tmp 可写" > /dev/console
+fi
+
+mount -t tmpfs -o size=256m tmpfs /tmp
+mount -t tmpfs -o size=64m tmpfs /var/tmp 2>/dev/null
+mkdir -p /home/agent /opt/agent
+mount -t ext4 /dev/vdb /home/agent
+mount -t ext4 -o ro /dev/vdc /opt/agent
+hostname smra-cell
+ip link set lo up 2>/dev/null || ifconfig lo 127.0.0.1 up 2>/dev/null
+
+# 代理程序死了就重启它；1 号进程退出会让内核恐慌
+while true; do
+    python3 /opt/agent/guest_agent.py
+    echo "smra-init: guest_agent 退出了，1 秒后重启" > /dev/console
+    sleep 1
+done

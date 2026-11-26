@@ -1,0 +1,25 @@
+# 由 deploy/install.sh 按仓库里的 deploy/smra-agent.service 生成，重装会覆盖。别直接改这个文件：
+# 这台机器特有的设置（资源上限、电脑容器的 CPU 和内存）放进 smra-agent.service.d/local.conf，重装不会覆盖。
+[Unit]
+Description=SMRA Agent
+After=network-online.target docker.service
+Wants=network-online.target docker.service
+StartLimitIntervalSec=600
+StartLimitBurst=5
+
+[Service]
+Type=simple
+WorkingDirectory=@ROOT@
+Environment="PATH=@PATH@" "HOME=@HOME@"@EXTRA_ENV@
+ExecStart=@UV@ run --frozen python -m host.main --channel telegram
+Restart=on-failure
+RestartSec=15
+# 自检不通过（缺密钥、连不上 docker 之类）退出码是 78：重启也没用，不重启
+RestartPreventExitStatus=78
+# 停止信号只发给宿主进程，电脑和浏览器容器由宿主自己收拾
+KillMode=mixed
+# 宿主会等手上的运行做完（SMRA_STOP_GRACE_S，默认 300 秒），这里要比它长
+TimeoutStopSec=360
+
+[Install]
+WantedBy=multi-user.target

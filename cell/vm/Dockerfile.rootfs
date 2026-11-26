@@ -1,0 +1,12 @@
+# microVM 系统盘的内容。只用 Docker 来拼文件树，不用来运行：
+#   cell/vm/build-images.sh 把它导出成一个 ext4 镜像。
+FROM python:3.12-slim
+
+RUN apt-get update \
+    && apt-get install -y --no-install-recommends util-linux iproute2 git curl ca-certificates procps \
+    && rm -rf /var/lib/apt/lists/* \
+    && pip install --no-cache-dir anthropic \
+    && ln -sf "$(command -v python3)" /usr/bin/python3
+
+COPY cell/vm/smra-init /sbin/smra-init
+RUN chmod 755 /sbin/smra-init

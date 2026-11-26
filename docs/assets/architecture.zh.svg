@@ -1,0 +1,157 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 1280 830" width="1280" height="830" role="img" aria-label="smra-agent architecture">
+<style>
+  .bg{fill:#ffffff}
+  .host{fill:#f6f8fa;stroke:#d0d7de;stroke-width:1.5}
+  .card{fill:#ffffff;stroke:#d0d7de;stroke-width:1.2}
+  .cell{fill:#fff8f7;stroke:#cf222e;stroke-width:1.6;stroke-dasharray:7 5}
+  .cellcard{fill:#ffffff;stroke:#f0b8b5;stroke-width:1.2}
+  .gate{fill:#f0f6ff;stroke:#0969da;stroke-width:1.5}
+  .badge{fill:#0969da}
+  .ext{fill:#ffffff;stroke:#8c959f;stroke-width:1.2;stroke-dasharray:3 3}
+  .vault{fill:#fbefff;stroke:#8250df;stroke-width:1.3}
+  .user{fill:#ffffff;stroke:#1f883d;stroke-width:1.5}
+  .t{font-family:-apple-system,'Segoe UI','PingFang SC','Microsoft YaHei','Noto Sans CJK SC',Helvetica,Arial,sans-serif;fill:#1f2328}
+  .h{font-size:15px;font-weight:600}
+  .s{font-size:12px;fill:#59636e}
+  .zone{font-size:13px;font-weight:700;letter-spacing:.5px;fill:#59636e}
+  .zonered{font-size:14px;font-weight:700;fill:#cf222e}
+  .ex{font-size:10.5px;font-weight:700;fill:#ffffff;letter-spacing:.5px}
+  .lab{font-size:11.5px;fill:#59636e}
+  .flow{stroke:#57606a;stroke-width:1.6;fill:none}
+  .appr{stroke:#bf8700;stroke-width:1.6;fill:none;stroke-dasharray:6 4}
+  .cred{stroke:#8250df;stroke-width:1.6;fill:none;stroke-dasharray:2 4;stroke-linecap:round}
+  .halo{stroke:#ffffff;stroke-width:7;fill:none}
+  .ma{fill:#57606a}.mb{fill:#bf8700}.mc{fill:#8250df}
+  @media (prefers-color-scheme: dark){
+    .bg{fill:#0d1117}
+    .host{fill:#161b22;stroke:#30363d}
+    .card{fill:#0d1117;stroke:#3d444d}
+    .cell{fill:#1c1214;stroke:#f85149}
+    .cellcard{fill:#0d1117;stroke:#6e3630}
+    .gate{fill:#0c1d33;stroke:#4493f8}
+    .badge{fill:#1f6feb}
+    .ext{fill:#0d1117;stroke:#6e7681}
+    .vault{fill:#1d1430;stroke:#a371f7}
+    .user{fill:#0d1117;stroke:#3fb950}
+    .t{fill:#e6edf3}
+    .s,.zone,.lab{fill:#9198a1}
+    .zonered{fill:#f85149}
+    .flow{stroke:#8b949e}.ma{fill:#8b949e}
+    .appr{stroke:#d29922}.mb{fill:#d29922}
+    .cred{stroke:#a371f7}.mc{fill:#a371f7}
+    .halo{stroke:#161b22}
+  }
+</style>
+<defs>
+<marker id="ma" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="7" markerHeight="7" orient="auto-start-reverse"><path d="M0,0 L10,5 L0,10 z" class="ma"/></marker>
+<marker id="mb" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="7" markerHeight="7" orient="auto-start-reverse"><path d="M0,0 L10,5 L0,10 z" class="mb"/></marker>
+<marker id="mc" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="7" markerHeight="7" orient="auto-start-reverse"><path d="M0,0 L10,5 L0,10 z" class="mc"/></marker>
+</defs>
+<rect width="1280" height="830" rx="16" class="bg"/>
+<rect x="200" y="22" width="805" height="738" rx="16" class="host"/>
+<text x="222" y="748" class="t zone" text-anchor="start">宿主 · 可信</text>
+<text x="1040" y="286" class="t zone" text-anchor="start">外部</text>
+<rect x="20" y="60" width="152" height="112" rx="10" class="user"/>
+<text x="36" y="90" class="t h" text-anchor="start">你 · 唯一的主人</text>
+<text x="36" y="110" class="t s" text-anchor="start">Telegram · 终端</text>
+<text x="36" y="128" class="t s" text-anchor="start">批准 · 接管登录</text>
+<rect x="230" y="60" width="150" height="90" rx="10" class="card"/>
+<text x="246" y="86" class="t h" text-anchor="start">渠道</text>
+<text x="246" y="106" class="t s" text-anchor="start">Telegram · 终端</text>
+<rect x="410" y="60" width="150" height="90" rx="10" class="card"/>
+<text x="426" y="86" class="t h" text-anchor="start">收件箱</text>
+<text x="426" y="106" class="t s" text-anchor="start">持久 · 去重</text>
+<rect x="590" y="60" width="180" height="90" rx="10" class="card"/>
+<text x="606" y="86" class="t h" text-anchor="start">工作进程</text>
+<text x="606" y="106" class="t s" text-anchor="start">合并事件 · 前置检查</text>
+<text x="606" y="124" class="t s" text-anchor="start">选会话 · 启动运行</text>
+<rect x="800" y="60" width="160" height="90" rx="10" class="card"/>
+<text x="816" y="86" class="t h" text-anchor="start">发件箱</text>
+<text x="816" y="106" class="t s" text-anchor="start">每日上限 · 安静时段</text>
+<text x="816" y="124" class="t s" text-anchor="start">摘要合并 · 重试</text>
+<rect x="410" y="178" width="168" height="68" rx="10" class="card"/>
+<text x="426" y="203" class="t h" text-anchor="start">定时器 · Webhook</text>
+<text x="426" y="223" class="t s" text-anchor="start">cron · 跟进 · 签名校验</text>
+<path d="M172,96 L228,96" class="flow" marker-end="url(#ma)"/>
+<path d="M230,128 L174,128" class="flow" marker-end="url(#ma)"/>
+<path d="M380,105 L408,105" class="flow" marker-end="url(#ma)"/>
+<path d="M560,105 L588,105" class="flow" marker-end="url(#ma)"/>
+<path d="M494,178 L494,152" class="flow" marker-end="url(#ma)"/>
+<path d="M880,60 L880,42 Q880,36 874,36 L311,36 Q305,36 305,42 L305,58" class="flow" marker-end="url(#ma)"/>
+<path d="M680,150 L680,266 Q680,272 674,272 L401,272 Q395,272 395,278 L395,298" class="flow" marker-end="url(#ma)"/>
+<text x="692" y="202" class="t lab" text-anchor="start">启动一次运行</text>
+<text x="692" y="219" class="t lab" text-anchor="start">发一张通行证</text>
+<rect x="230" y="300" width="330" height="330" rx="14" class="cell"/>
+<text x="250" y="328" class="t zonered" text-anchor="start">电脑 · 不可信</text>
+<text x="250" y="347" class="t s" text-anchor="start">Docker 容器 / Firecracker microVM</text>
+<rect x="250" y="362" width="290" height="62" rx="10" class="cellcard"/>
+<text x="266" y="386" class="t h" text-anchor="start">Agent 运行程序</text>
+<text x="266" y="406" class="t s" text-anchor="start">拼上下文 → 调模型 → 执行工具</text>
+<rect x="250" y="436" width="140" height="86" rx="10" class="cellcard"/>
+<text x="266" y="462" class="t h" text-anchor="start">工具</text>
+<text x="266" y="482" class="t s" text-anchor="start">shell · 文件</text>
+<text x="266" y="501" class="t s" text-anchor="start">fetch · 浏览器</text>
+<rect x="400" y="436" width="140" height="86" rx="10" class="cellcard"/>
+<text x="416" y="462" class="t h" text-anchor="start">主目录</text>
+<text x="416" y="482" class="t s" text-anchor="start">记忆 · 技能</text>
+<text x="416" y="501" class="t s" text-anchor="start">工作文件 · 快照</text>
+<text x="395" y="572" class="t s" text-anchor="middle">没有直连网络，没有真凭证</text>
+<text x="395" y="592" class="t s" text-anchor="middle">手里只有替身令牌</text>
+<path d="M860,488 L975,488" class="appr"/>
+<path d="M860,600 L975,600" class="appr"/>
+<path d="M975,600 L975,111 Q975,105 969,105 L962,105" class="appr" marker-end="url(#mb)"/>
+<text x="963" y="258" class="t lab" text-anchor="end">审批 · 通知</text>
+<rect x="620" y="300" width="240" height="92" rx="10" class="gate"/>
+<rect x="636" y="312" width="52" height="19" rx="9.5" class="badge"/>
+<text x="662.0" y="325.5" class="t ex" text-anchor="middle">出口一</text>
+<text x="698" y="327" class="t h" text-anchor="start">模型代理</text>
+<text x="636" y="352" class="t s" text-anchor="start">密钥只在这里</text>
+<text x="636" y="370" class="t s" text-anchor="start">注入检测 · 计费限额</text>
+<rect x="620" y="408" width="240" height="112" rx="10" class="gate"/>
+<rect x="636" y="420" width="52" height="19" rx="9.5" class="badge"/>
+<text x="662.0" y="433.5" class="t ex" text-anchor="middle">出口二</text>
+<text x="698" y="435" class="t h" text-anchor="start">出网代理</text>
+<text x="636" y="460" class="t s" text-anchor="start">TLS 解密，逐个请求裁决</text>
+<text x="636" y="478" class="t s" text-anchor="start">只许公网 · 写请求要你批准</text>
+<text x="636" y="496" class="t s" text-anchor="start">替身令牌 → 真凭证</text>
+<rect x="620" y="538" width="240" height="92" rx="10" class="gate"/>
+<rect x="636" y="550" width="52" height="19" rx="9.5" class="badge"/>
+<text x="662.0" y="563.5" class="t ex" text-anchor="middle">出口三</text>
+<text x="698" y="565" class="t h" text-anchor="start">宿主接口</text>
+<text x="636" y="590" class="t s" text-anchor="start">通知 · 定时器 · 浏览器 · 交接</text>
+<text x="636" y="608" class="t s" text-anchor="start">固定几个动作，凭通行证调用</text>
+<path d="M560,346 L618,346" class="flow" marker-end="url(#ma)"/>
+<path d="M560,464 L618,464" class="flow" marker-end="url(#ma)"/>
+<path d="M560,584 L618,584" class="flow" marker-end="url(#ma)"/>
+<path d="M955,346 L995,346" class="halo"/>
+<path d="M955,440 L995,440" class="halo"/>
+<path d="M860,346 L1038,346" class="flow" marker-end="url(#ma)"/>
+<path d="M860,440 L1038,440" class="flow" marker-end="url(#ma)"/>
+<rect x="876" y="512" width="90" height="72" rx="10" class="vault"/>
+<text x="887" y="536" class="t h" text-anchor="start">凭证库</text>
+<text x="887" y="556" class="t s" text-anchor="start">加密保存</text>
+<text x="887" y="573" class="t s" text-anchor="start">OAuth 刷新</text>
+<path d="M920,512 L920,507 Q920,501 914,501 L864,501" class="cred" marker-end="url(#mc)"/>
+<rect x="620" y="660" width="240" height="74" rx="10" class="card"/>
+<text x="636" y="686" class="t h" text-anchor="start">浏览器</text>
+<text x="636" y="706" class="t s" text-anchor="start">独立进程 · 登录接管</text>
+<text x="636" y="724" class="t s" text-anchor="start">流量同样经过出口二</text>
+<path d="M740,630 L740,658" class="flow" marker-end="url(#ma)"/>
+<rect x="1040" y="300" width="220" height="92" rx="10" class="ext"/>
+<text x="1056" y="326" class="t h" text-anchor="start">模型提供方</text>
+<text x="1056" y="346" class="t s" text-anchor="start">Anthropic · DeepSeek</text>
+<text x="1056" y="364" class="t s" text-anchor="start">OpenAI 兼容接口</text>
+<rect x="1040" y="408" width="220" height="112" rx="10" class="ext"/>
+<text x="1056" y="434" class="t h" text-anchor="start">互联网与已连接服务</text>
+<text x="1056" y="454" class="t s" text-anchor="start">网页 · 搜索 · 包管理源</text>
+<text x="1056" y="472" class="t s" text-anchor="start">Gmail · 日历 · 云盘</text>
+<text x="1056" y="490" class="t s" text-anchor="start">GitHub · Notion · Slack</text>
+<path d="M220,796 L254,796" class="flow" marker-end="url(#ma)"/>
+<text x="264" y="800" class="t lab" text-anchor="start">数据流</text>
+<path d="M340,796 L374,796" class="appr" marker-end="url(#mb)"/>
+<text x="384" y="800" class="t lab" text-anchor="start">审批与通知</text>
+<path d="M484,796 L518,796" class="cred" marker-end="url(#mc)"/>
+<text x="528" y="800" class="t lab" text-anchor="start">凭证（只在宿主内）</text>
+<rect x="676" y="788" width="30" height="16" rx="4" class="cell"/>
+<text x="716" y="800" class="t lab" text-anchor="start">隔离边界</text>
+</svg>
